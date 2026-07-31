@@ -150,10 +150,12 @@ function fillSolvedBoard(board: SudokuBoard): boolean {
   for (const value of shuffled(choice.candidates)) {
     board[choice.index] = value
 
+    // check if this leads to a solution; if so, return true
     if (fillSolvedBoard(board)) {
       return true
     }
 
+    // if placing this value didn't lead to a solution, reset the cell and try the next candidate
     board[choice.index] = 0
   }
 

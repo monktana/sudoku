@@ -66,6 +66,14 @@ body {
   border: 1px solid #bfd3e8;
   background: transparent;
   cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1a3651;
+}
+
+.cell.prefilled {
+  background: #eef6ff;
+  font-weight: 700;
 }
 
 .cell:nth-child(3n) {
@@ -103,12 +111,46 @@ body {
   gap: 0.5rem;
 }
 
+.difficulty-control {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.difficulty-control label {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.difficulty-control select {
+  font: inherit;
+  border: 1px solid #99bad8;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  background: #f7fbff;
+  color: #0b1f33;
+}
+
+.difficulty-hint {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #355271;
+}
+
 button {
   font: inherit;
   border: 1px solid #99bad8;
   border-radius: 8px;
   padding: 0.55rem 0.7rem;
   background: #f7fbff;
+}
+
+button:not(:disabled):hover {
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .actions {
