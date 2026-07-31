@@ -65,7 +65,6 @@ body {
 .cell {
   border: 1px solid #bfd3e8;
   background: transparent;
-  cursor: pointer;
   font-size: 1rem;
   font-weight: 500;
   color: #1a3651;
@@ -74,6 +73,17 @@ body {
 .cell.prefilled {
   background: #eef6ff;
   font-weight: 700;
+  color: #0f2942;
+  cursor: not-allowed;
+}
+
+.cell:not(.prefilled) {
+  cursor: pointer;
+}
+
+.cell.selected {
+  background: #d8e9fb;
+  box-shadow: inset 0 0 0 2px #2a5f93;
 }
 
 .cell:nth-child(3n) {
@@ -130,6 +140,16 @@ body {
   color: #0b1f33;
 }
 
+.difficulty-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+
+.new-game-btn {
+  white-space: nowrap;
+}
+
 .difficulty-hint {
   margin: 0;
   font-size: 0.88rem;
@@ -144,7 +164,7 @@ button {
   background: #f7fbff;
 }
 
-button:not(:disabled):hover {
+button:not(:disabled):not(.prefilled):hover {
   cursor: pointer;
 }
 
