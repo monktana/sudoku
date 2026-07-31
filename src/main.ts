@@ -1,4 +1,4 @@
-import { registerSW } from 'vite-plugin-pwa/register'
+import { registerSW } from 'virtual:pwa-register'
 import './app.css'
 import App from './App.svelte'
 
