@@ -2,19 +2,23 @@
   import { generateSudoku, getDifficultyTargetClues, type Difficulty, type SudokuPuzzle } from './lib/sudoku'
 
   const difficulties: Difficulty[] = ['easy', 'medium', 'hard', 'expert', 'master']
+  type CheckResult = 'idle' | 'correct' | 'incorrect'
 
   let selectedDifficulty: Difficulty = 'medium'
   let game: SudokuPuzzle = generateSudoku(selectedDifficulty)
   let currentBoard: number[] = [...game.puzzle]
   let selectedCellIndex: number | null = null
+  let checkResult: CheckResult = 'idle'
 
   $: clueTarget = getDifficultyTargetClues(selectedDifficulty)
   $: canEditSelectedCell = selectedCellIndex !== null && game.puzzle[selectedCellIndex] === 0
+  $: isBoardComplete = currentBoard.every((value) => value !== 0)
 
   function startNewGame(): void {
     game = generateSudoku(selectedDifficulty)
     currentBoard = [...game.puzzle]
     selectedCellIndex = null
+    checkResult = 'idle'
   }
 
   function selectCell(index: number): void {
@@ -33,6 +37,7 @@
     const nextBoard = [...currentBoard]
     nextBoard[selectedCellIndex] = nextBoard[selectedCellIndex] === value ? 0 : value
     currentBoard = nextBoard
+    checkResult = 'idle'
   }
 
   function clearSelectedCell(): void {
@@ -43,6 +48,16 @@
     const nextBoard = [...currentBoard]
     nextBoard[selectedCellIndex] = 0
     currentBoard = nextBoard
+    checkResult = 'idle'
+  }
+
+  function checkSolution(): void {
+    if (!isBoardComplete) {
+      return
+    }
+
+    const isCorrect = currentBoard.every((value, index) => value === game.solution[index])
+    checkResult = isCorrect ? 'correct' : 'incorrect'
   }
 
   function handleKeydown(event: KeyboardEvent): void {
@@ -130,8 +145,14 @@
 
     <div class="actions">
       <button on:click={clearSelectedCell} disabled={!canEditSelectedCell}>Clear Cell</button>
-      <button disabled>Check</button>
+      <button on:click={checkSolution} disabled={!isBoardComplete}>Check</button>
       <button disabled>Hint</button>
     </div>
+
+    {#if checkResult !== 'idle'}
+      <p class="check-result" class:correct={checkResult === 'correct'} class:incorrect={checkResult === 'incorrect'}>
+        {checkResult === 'correct' ? 'Correct solution! Well done.' : 'Not correct yet. Please check your entries.'}
+      </p>
+    {/if}
   </aside>
 </main>
