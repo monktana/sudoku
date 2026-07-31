@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Sudoku icon">
+  <rect width="512" height="512" rx="96" fill="#154360" />
+  <rect x="96" y="96" width="320" height="320" fill="#f3f9ff" />
+  <g stroke="#154360" stroke-width="12">
+    <line x1="203" y1="96" x2="203" y2="416" />
+    <line x1="309" y1="96" x2="309" y2="416" />
+    <line x1="96" y1="203" x2="416" y2="203" />
+    <line x1="96" y1="309" x2="416" y2="309" />
+  </g>
+  <g fill="#154360" font-size="76" font-family="Arial, sans-serif" font-weight="700">
+    <text x="126" y="176">1</text>
+    <text x="338" y="176">9</text>
+    <text x="232" y="282">5</text>
+    <text x="126" y="388">7</text>
+    <text x="338" y="388">3</text>
+  </g>
+</svg>
