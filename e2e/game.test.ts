@@ -102,4 +102,73 @@ test.describe('Sudoku Game', () => {
     await page.locator('#difficulty').selectOption('hard')
     await expect(page.locator('#difficulty')).toHaveValue('hard')
   })
+
+  test('notes mode toggles via control button', async ({ page }) => {
+    const notesToggle = page.locator('button', { hasText: 'Notes Mode' })
+
+    await expect(notesToggle).toHaveAttribute('aria-pressed', 'false')
+    await expect(notesToggle).toHaveText('Notes Mode: Off')
+
+    await notesToggle.click()
+    await expect(notesToggle).toHaveAttribute('aria-pressed', 'true')
+    await expect(notesToggle).toHaveText('Notes Mode: On')
+
+    await notesToggle.click()
+    await expect(notesToggle).toHaveAttribute('aria-pressed', 'false')
+    await expect(notesToggle).toHaveText('Notes Mode: Off')
+  })
+
+  test('notes mode writes desaturated note candidates into a selected empty cell', async ({ page }) => {
+    const emptyCell = page.locator('.cell:not(.prefilled)').first()
+    await emptyCell.click()
+
+    await page.locator('button', { hasText: 'Notes Mode: Off' }).click()
+    await page.locator('.num-btn', { hasText: '2' }).click()
+    await page.locator('.num-btn', { hasText: '7' }).click()
+
+    const notesContainer = emptyCell.locator('.cell-notes')
+    await expect(notesContainer).toBeVisible()
+    await expect(emptyCell.locator('.note-value', { hasText: '2' })).toHaveCount(1)
+    await expect(emptyCell.locator('.note-value', { hasText: '7' })).toHaveCount(1)
+
+    const noteColor = await emptyCell.locator('.note-value', { hasText: '2' }).evaluate((el) => {
+      return getComputedStyle(el).color
+    })
+    expect(noteColor).toBe('rgb(93, 112, 134)')
+  })
+
+  test('digit keys toggle notes in notes mode and set final value in normal mode', async ({ page }) => {
+    const emptyCell = page.locator('.cell:not(.prefilled)').first()
+    await emptyCell.click()
+
+    await page.locator('button', { hasText: 'Notes Mode: Off' }).click()
+
+    await page.keyboard.press('5')
+    await expect(emptyCell.locator('.note-value', { hasText: '5' })).toHaveCount(1)
+
+    await page.keyboard.press('5')
+    await expect(emptyCell.locator('.note-value', { hasText: '5' })).toHaveCount(0)
+
+    await page.locator('button', { hasText: 'Notes Mode: On' }).click()
+    await page.keyboard.press('5')
+    await expect(emptyCell).toHaveText('5')
+    await expect(emptyCell.locator('.cell-notes')).toHaveCount(0)
+  })
+
+  test('setting a final value clears existing notes in that cell', async ({ page }) => {
+    const emptyCell = page.locator('.cell:not(.prefilled)').first()
+    await emptyCell.click()
+
+    await page.locator('button', { hasText: 'Notes Mode: Off' }).click()
+    await page.locator('.num-btn', { hasText: '1' }).click()
+    await page.locator('.num-btn', { hasText: '9' }).click()
+    await expect(emptyCell.locator('.note-value', { hasText: '1' })).toHaveCount(1)
+    await expect(emptyCell.locator('.note-value', { hasText: '9' })).toHaveCount(1)
+
+    await page.locator('button', { hasText: 'Notes Mode: On' }).click()
+    await page.locator('.num-btn', { hasText: '4' }).click()
+
+    await expect(emptyCell).toHaveText('4')
+    await expect(emptyCell.locator('.cell-notes')).toHaveCount(0)
+  })
 })
