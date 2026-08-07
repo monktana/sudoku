@@ -10,6 +10,8 @@
   let currentBoard: number[] = $state([...initialGame.puzzle])
   let selectedCellIndex: number | null = $state(null)
   let checkResult: CheckResult = $state('idle')
+  let notesByCell: number[][] = $state(Array.from({ length: 81 }, () => []))
+  let isNotesMode: boolean = $state(false)
 
   let clueTarget = $derived(getDifficultyTargetClues(selectedDifficulty))
   let canEditSelectedCell = $derived(selectedCellIndex !== null && game.puzzle[selectedCellIndex] === 0)
@@ -61,7 +63,7 @@
     const currentNotes = nextNotes[selectedCellIndex]
     const hasNote = currentNotes.includes(value)
     nextNotes[selectedCellIndex] = hasNote
-      ? currentNotes.filter((note) => note !== value)
+      ? currentNotes.filter((note: number) => note !== value)
       : [...currentNotes, value].sort((a, b) => a - b)
     notesByCell = nextNotes
     checkResult = 'idle'
@@ -188,7 +190,7 @@
       {/each}
     </div>
 
-    <button class:active={isNotesMode} on:click={toggleNotesMode} aria-pressed={isNotesMode}>
+    <button class:active={isNotesMode} onclick={toggleNotesMode} aria-pressed={isNotesMode}>
       {isNotesMode ? 'Notes Mode: On' : 'Notes Mode: Off'}
     </button>
 
