@@ -4,15 +4,16 @@
   const difficulties: Difficulty[] = ['easy', 'medium', 'hard', 'expert', 'master']
   type CheckResult = 'idle' | 'correct' | 'incorrect'
 
-  let selectedDifficulty: Difficulty = 'medium'
-  let game: SudokuPuzzle = generateSudoku(selectedDifficulty)
-  let currentBoard: number[] = [...game.puzzle]
-  let selectedCellIndex: number | null = null
-  let checkResult: CheckResult = 'idle'
+  const initialGame = generateSudoku('medium')
+  let selectedDifficulty: Difficulty = $state('medium')
+  let game: SudokuPuzzle = $state(initialGame)
+  let currentBoard: number[] = $state([...initialGame.puzzle])
+  let selectedCellIndex: number | null = $state(null)
+  let checkResult: CheckResult = $state('idle')
 
-  $: clueTarget = getDifficultyTargetClues(selectedDifficulty)
-  $: canEditSelectedCell = selectedCellIndex !== null && game.puzzle[selectedCellIndex] === 0
-  $: isBoardComplete = currentBoard.every((value) => value !== 0)
+  let clueTarget = $derived(getDifficultyTargetClues(selectedDifficulty))
+  let canEditSelectedCell = $derived(selectedCellIndex !== null && game.puzzle[selectedCellIndex] === 0)
+  let isBoardComplete = $derived(currentBoard.every((value) => value !== 0))
 
   function startNewGame(): void {
     game = generateSudoku(selectedDifficulty)
@@ -97,7 +98,7 @@
   }
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
 <main class="layout">
   <header class="header">
@@ -112,7 +113,7 @@
         class:prefilled={game.puzzle[i] !== 0}
         class:selected={selectedCellIndex === i}
         aria-label={`Cell ${i + 1}`}
-        on:click={() => selectCell(i)}
+        onclick={() => selectCell(i)}
       >
         {value === 0 ? '' : value}
       </button>
@@ -130,22 +131,22 @@
             <option value={difficulty}>{labelForDifficulty(difficulty)}</option>
           {/each}
         </select>
-        <button class="new-game-btn" on:click={startNewGame}>New Game</button>
+        <button class="new-game-btn" onclick={startNewGame}>New Game</button>
       </div>
       <p class="difficulty-hint">Target clues: {clueTarget} | Actual clues: {game.clues}</p>
     </div>
 
     <div class="number-grid">
       {#each Array(9) as _, i}
-        <button class="num-btn" on:click={() => setSelectedCellValue(i + 1)} disabled={!canEditSelectedCell}>
+        <button class="num-btn" onclick={() => setSelectedCellValue(i + 1)} disabled={!canEditSelectedCell}>
           {i + 1}
         </button>
       {/each}
     </div>
 
     <div class="actions">
-      <button on:click={clearSelectedCell} disabled={!canEditSelectedCell}>Clear Cell</button>
-      <button on:click={checkSolution} disabled={!isBoardComplete}>Check</button>
+      <button onclick={clearSelectedCell} disabled={!canEditSelectedCell}>Clear Cell</button>
+      <button onclick={checkSolution} disabled={!isBoardComplete}>Check</button>
       <button disabled>Hint</button>
     </div>
 
