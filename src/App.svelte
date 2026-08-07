@@ -7,6 +7,8 @@
   let selectedDifficulty: Difficulty = 'medium'
   let game: SudokuPuzzle = generateSudoku(selectedDifficulty)
   let currentBoard: number[] = [...game.puzzle]
+  let notesByCell: number[][] = Array.from({ length: 81 }, () => [])
+  let isNotesMode = false
   let selectedCellIndex: number | null = null
   let checkResult: CheckResult = 'idle'
 
@@ -17,6 +19,8 @@
   function startNewGame(): void {
     game = generateSudoku(selectedDifficulty)
     currentBoard = [...game.puzzle]
+    notesByCell = Array.from({ length: 81 }, () => [])
+    isNotesMode = false
     selectedCellIndex = null
     checkResult = 'idle'
   }
@@ -34,9 +38,33 @@
       return
     }
 
+    if (isNotesMode) {
+      toggleSelectedCellNote(value)
+      return
+    }
+
     const nextBoard = [...currentBoard]
     nextBoard[selectedCellIndex] = nextBoard[selectedCellIndex] === value ? 0 : value
     currentBoard = nextBoard
+
+    const nextNotes = [...notesByCell]
+    nextNotes[selectedCellIndex] = []
+    notesByCell = nextNotes
+    checkResult = 'idle'
+  }
+
+  function toggleSelectedCellNote(value: number): void {
+    if (!canEditSelectedCell || selectedCellIndex === null || currentBoard[selectedCellIndex] !== 0) {
+      return
+    }
+
+    const nextNotes = [...notesByCell]
+    const currentNotes = nextNotes[selectedCellIndex]
+    const hasNote = currentNotes.includes(value)
+    nextNotes[selectedCellIndex] = hasNote
+      ? currentNotes.filter((note) => note !== value)
+      : [...currentNotes, value].sort((a, b) => a - b)
+    notesByCell = nextNotes
     checkResult = 'idle'
   }
 
@@ -48,7 +76,15 @@
     const nextBoard = [...currentBoard]
     nextBoard[selectedCellIndex] = 0
     currentBoard = nextBoard
+
+    const nextNotes = [...notesByCell]
+    nextNotes[selectedCellIndex] = []
+    notesByCell = nextNotes
     checkResult = 'idle'
+  }
+
+  function toggleNotesMode(): void {
+    isNotesMode = !isNotesMode
   }
 
   function checkSolution(): void {
@@ -114,7 +150,17 @@
         aria-label={`Cell ${i + 1}`}
         on:click={() => selectCell(i)}
       >
-        {value === 0 ? '' : value}
+        {#if value === 0}
+          {#if notesByCell[i].length > 0}
+            <span class="cell-notes" aria-hidden="true">
+              {#each Array(9) as _, noteIndex}
+                <span class="note-value">{notesByCell[i].includes(noteIndex + 1) ? noteIndex + 1 : ''}</span>
+              {/each}
+            </span>
+          {/if}
+        {:else}
+          {value}
+        {/if}
       </button>
     {/each}
   </section>
@@ -142,6 +188,10 @@
         </button>
       {/each}
     </div>
+
+    <button class:active={isNotesMode} on:click={toggleNotesMode} aria-pressed={isNotesMode}>
+      {isNotesMode ? 'Notes Mode: On' : 'Notes Mode: Off'}
+    </button>
 
     <div class="actions">
       <button on:click={clearSelectedCell} disabled={!canEditSelectedCell}>Clear Cell</button>
