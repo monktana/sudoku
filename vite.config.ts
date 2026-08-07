@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
+import { svelteTesting } from '@testing-library/svelte/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
@@ -8,6 +9,9 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.ts'],
+    resolve: {
+      conditions: ['browser']
+    },
     coverage: {
       provider: 'v8',
       include: ['src/lib/**'],
@@ -16,6 +20,7 @@ export default defineConfig({
   },
   plugins: [
     svelte(),
+    svelteTesting(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
