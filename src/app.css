@@ -92,7 +92,7 @@ body {
   background: #eef6ff;
   font-weight: 700;
   color: #0f2942;
-  cursor: not-allowed;
+  cursor: pointer;
 }
 
 .cell:not(.prefilled) {
@@ -102,6 +102,16 @@ body {
 .cell.selected {
   background: #d8e9fb;
   box-shadow: inset 0 0 0 2px #2a5f93;
+}
+
+.cell.matching-value {
+  background: #ffe08a;
+  box-shadow: inset 0 0 0 1px #d39c17;
+}
+
+.cell.selected.matching-value {
+  background: #ffd166;
+  box-shadow: inset 0 0 0 2px #8f4b00;
 }
 
 .cell:nth-child(3n) {
