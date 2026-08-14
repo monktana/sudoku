@@ -10,10 +10,10 @@ test.describe('Sudoku Game', () => {
     await expect(cells).toHaveCount(81)
   })
 
-  test('prefilled cells are not selectable', async ({ page }) => {
+  test('prefilled cells are selectable', async ({ page }) => {
     const prefilled = page.locator('.cell.prefilled').first()
     await prefilled.click()
-    await expect(page.locator('.cell.selected')).toHaveCount(0)
+    await expect(prefilled).toHaveClass(/selected/)
   })
 
   test('clicking an empty cell selects it', async ({ page }) => {
@@ -170,5 +170,54 @@ test.describe('Sudoku Game', () => {
 
     await expect(emptyCell).toHaveText('4')
     await expect(emptyCell.locator('.cell-notes')).toHaveCount(0)
+  })
+
+  test('selecting a filled cell highlights all cells with the same filled value', async ({ page }) => {
+    const prefilledCells = page.locator('.cell.prefilled')
+    const prefilledCount = await prefilledCells.count()
+
+    let targetValue: string | null = null
+    for (let i = 0; i < prefilledCount; i++) {
+      const value = (await prefilledCells.nth(i).textContent())?.trim() ?? ''
+      if (!value) continue
+      const sameValueCount = await page.locator('.cell', { hasText: value }).count()
+      if (sameValueCount > 1) {
+        targetValue = value
+        break
+      }
+    }
+
+    expect(targetValue).not.toBeNull()
+
+    const selectedPrefilled = page.locator('.cell.prefilled', { hasText: targetValue! }).first()
+    await selectedPrefilled.click()
+
+    await expect(selectedPrefilled).toHaveClass(/selected/)
+
+    const allCells = page.locator('.cell')
+    const totalCells = await allCells.count()
+    for (let i = 0; i < totalCells; i++) {
+      const cell = allCells.nth(i)
+      const text = (await cell.textContent())?.trim() ?? ''
+      const hasNotes = (await cell.locator('.cell-notes').count()) > 0
+      if (!hasNotes && text === targetValue) {
+        await expect(cell).toHaveClass(/matching-value/)
+      }
+    }
+  })
+
+  test('note-only cells are not treated as matching-value highlights', async ({ page }) => {
+    const emptyCell = page.locator('.cell:not(.prefilled)').first()
+    await emptyCell.click()
+
+    await page.locator('button', { hasText: 'Notes Mode: Off' }).click()
+    await page.locator('.num-btn', { hasText: '5' }).click()
+    await expect(emptyCell.locator('.cell-notes')).toHaveCount(1)
+
+    const prefilledFive = page.locator('.cell.prefilled', { hasText: '5' }).first()
+    await prefilledFive.click()
+
+    await expect(prefilledFive).toHaveClass(/selected/)
+    await expect(emptyCell).not.toHaveClass(/matching-value/)
   })
 })
