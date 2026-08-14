@@ -16,6 +16,9 @@
   let clueTarget = $derived(getDifficultyTargetClues(selectedDifficulty))
   let canEditSelectedCell = $derived(selectedCellIndex !== null && game.puzzle[selectedCellIndex] === 0)
   let isBoardComplete = $derived(currentBoard.every((value) => value !== 0))
+  let selectedFilledValue = $derived(
+    selectedCellIndex !== null && currentBoard[selectedCellIndex] !== 0 ? currentBoard[selectedCellIndex] : null
+  )
 
   function startNewGame(): void {
     game = generateSudoku(selectedDifficulty)
@@ -27,10 +30,6 @@
   }
 
   function selectCell(index: number): void {
-    if (game.puzzle[index] !== 0) {
-      return
-    }
-
     selectedCellIndex = index
   }
 
@@ -148,6 +147,7 @@
         class="cell"
         class:prefilled={game.puzzle[i] !== 0}
         class:selected={selectedCellIndex === i}
+        class:matching-value={selectedFilledValue !== null && currentBoard[i] === selectedFilledValue && currentBoard[i] !== 0}
         aria-label={`Cell ${i + 1}`}
         onclick={() => selectCell(i)}
       >
