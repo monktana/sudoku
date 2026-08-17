@@ -12,6 +12,8 @@
   let checkResult: CheckResult = $state('idle')
   let notesByCell: number[][] = $state(Array.from({ length: 81 }, () => []))
   let isNotesMode: boolean = $state(false)
+  let isDarkMode: boolean = $state(false)
+  let themeMode: 'auto' | 'dark' | 'light' = $state('auto')
 
   let clueTarget = $derived(getDifficultyTargetClues(selectedDifficulty))
   let canEditSelectedCell = $derived(selectedCellIndex !== null && game.puzzle[selectedCellIndex] === 0)
@@ -19,6 +21,77 @@
   let selectedFilledValue = $derived(
     selectedCellIndex !== null && currentBoard[selectedCellIndex] !== 0 ? currentBoard[selectedCellIndex] : null
   )
+
+  // Initialize theme from localStorage or system preference
+  $effect(() => {
+    const savedTheme = localStorage.getItem('sudoku-theme') as 'auto' | 'dark' | 'light' | null
+    if (savedTheme === 'dark' || savedTheme === 'light' || savedTheme === 'auto') {
+      themeMode = savedTheme
+    } else {
+      themeMode = 'auto'
+    }
+  })
+
+  // Watch for themeMode changes and update the theme
+  $effect(() => {
+    localStorage.setItem('sudoku-theme', themeMode)
+    updateTheme()
+  })
+
+  // Listen for system preference changes
+  $effect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    
+    const handleChange = () => {
+      // Only update if in auto mode
+      if (themeMode === 'auto') {
+        updateTheme()
+      }
+    }
+    
+    // Modern API
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange)
+      return () => mediaQuery.removeEventListener('change', handleChange)
+    }
+    // Legacy API fallback
+    else if (mediaQuery.addListener) {
+      mediaQuery.addListener(handleChange)
+      return () => mediaQuery.removeListener(handleChange)
+    }
+  })
+
+  function updateTheme(): void {
+    let shouldBeDark: boolean
+    
+    if (themeMode === 'auto') {
+      shouldBeDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    } else if (themeMode === 'dark') {
+      shouldBeDark = true
+    } else {
+      shouldBeDark = false
+    }
+    
+    isDarkMode = shouldBeDark
+    applyTheme(shouldBeDark)
+  }
+
+  function applyTheme(dark: boolean): void {
+    if (dark) {
+      document.documentElement.setAttribute('data-theme', 'dark')
+    } else {
+      document.documentElement.removeAttribute('data-theme')
+    }
+  }
+
+  function toggleDarkMode(): void {
+    const modes: ('auto' | 'dark' | 'light')[] = ['auto', 'dark', 'light']
+    const currentIndex = modes.indexOf(themeMode)
+    const nextIndex = (currentIndex + 1) % modes.length
+    themeMode = modes[nextIndex]
+    localStorage.setItem('sudoku-theme', themeMode)
+    updateTheme()
+  }
 
   function startNewGame(): void {
     game = generateSudoku(selectedDifficulty)
@@ -137,8 +210,15 @@
 
 <main class="layout">
   <header class="header">
-    <h1>Sudoku</h1>
-    <p>Vite + Svelte + TypeScript + CSS Grid + PWA Starter</p>
+    <div class="header-content">
+      <h1>Sudoku</h1>
+      <p>Vite + Svelte + TypeScript + CSS Grid + PWA Starter</p>
+    </div>
+    <select class="theme-select" bind:value={themeMode} aria-label="Theme preference">
+      <option value="auto">⚙️ Auto (system)</option>
+      <option value="dark">🌙 Dark</option>
+      <option value="light">☀️ Light</option>
+    </select>
   </header>
 
   <section class="board" aria-label="Generated Sudoku board">
