@@ -166,6 +166,58 @@ describe('App notes mode', () => {
     }
   })
 
+  it('clears matching notes from row, column and box peers when a value is placed', async () => {
+    const { container } = render(App)
+
+    const cells = Array.from(container.querySelectorAll('.cell')) as HTMLButtonElement[]
+    const editableIndices = cells
+      .map((cell, index) => ({ cell, index }))
+      .filter(({ cell }) => !cell.classList.contains('prefilled'))
+
+    function sharesRowColOrBox(a: number, b: number): boolean {
+      const rowA = Math.floor(a / 9)
+      const colA = a % 9
+      const boxA = Math.floor(rowA / 3) * 3 + Math.floor(colA / 3)
+      const rowB = Math.floor(b / 9)
+      const colB = b % 9
+      const boxB = Math.floor(rowB / 3) * 3 + Math.floor(colB / 3)
+      return rowA === rowB || colA === colB || boxA === boxB
+    }
+
+    let sourceCell: HTMLButtonElement | null = null
+    let peerCell: HTMLButtonElement | null = null
+
+    outer: for (const a of editableIndices) {
+      for (const b of editableIndices) {
+        if (a.index !== b.index && sharesRowColOrBox(a.index, b.index)) {
+          sourceCell = a.cell
+          peerCell = b.cell
+          break outer
+        }
+      }
+    }
+
+    if (!sourceCell || !peerCell) {
+      throw new Error('Expected at least two editable cells sharing a row, column or box')
+    }
+
+    await fireEvent.click(peerCell)
+
+    const notesToggle = screen.getByRole('button', { name: 'Notes off' })
+    await fireEvent.click(notesToggle)
+
+    const numberSix = screen.getByRole('button', { name: '6' })
+    await fireEvent.click(numberSix)
+    expect(peerCell.querySelector('.cell-notes')).not.toBeNull()
+
+    await fireEvent.click(notesToggle)
+    await fireEvent.click(sourceCell)
+    await fireEvent.click(numberSix)
+
+    expect(sourceCell).toHaveTextContent('6')
+    expect(peerCell.querySelector('.cell-notes')).toBeNull()
+  })
+
   it('does not highlight note-only cells for the selected value', async () => {
     const { container } = render(App)
 

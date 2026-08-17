@@ -1,4 +1,4 @@
-import { generateSudoku, getDifficultyTargetClues, type Difficulty, type SudokuPuzzle } from './sudoku'
+import { generateSudoku, getDifficultyTargetClues, getPeerIndices, type Difficulty, type SudokuPuzzle } from './sudoku'
 
 export const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'expert', 'master']
 
@@ -79,12 +79,22 @@ export class SudokuGame {
     }
 
     const index = this.selectedCellIndex
+    const isRemoving = this.board[index] === value
     const nextBoard = [...this.board]
-    nextBoard[index] = nextBoard[index] === value ? 0 : value
+    nextBoard[index] = isRemoving ? 0 : value
     this.board = nextBoard
 
     const nextNotes = [...this.notesByCell]
     nextNotes[index] = []
+
+    if (!isRemoving) {
+      for (const peer of getPeerIndices(index)) {
+        if (nextNotes[peer].includes(value)) {
+          nextNotes[peer] = nextNotes[peer].filter((note) => note !== value)
+        }
+      }
+    }
+
     this.notesByCell = nextNotes
     this.checkResult = 'idle'
   }

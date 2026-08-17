@@ -52,6 +52,33 @@ function indexToCol(index: number): number {
   return index % BOARD_SIZE
 }
 
+// Returns every other cell index sharing a row, column or box with the given cell.
+export function getPeerIndices(index: number): number[] {
+  const row = indexToRow(index)
+  const col = indexToCol(index)
+  const boxRowStart = Math.floor(row / BOX_SIZE) * BOX_SIZE
+  const boxColStart = Math.floor(col / BOX_SIZE) * BOX_SIZE
+
+  const peers = new Set<number>()
+
+  for (let c = 0; c < BOARD_SIZE; c += 1) {
+    peers.add(row * BOARD_SIZE + c)
+  }
+
+  for (let r = 0; r < BOARD_SIZE; r += 1) {
+    peers.add(r * BOARD_SIZE + col)
+  }
+
+  for (let r = boxRowStart; r < boxRowStart + BOX_SIZE; r += 1) {
+    for (let c = boxColStart; c < boxColStart + BOX_SIZE; c += 1) {
+      peers.add(r * BOARD_SIZE + c)
+    }
+  }
+
+  peers.delete(index)
+  return [...peers]
+}
+
 // Checks whether a value can be placed in a cell under Sudoku rules.
 function canPlace(board: SudokuBoard, index: number, value: number): boolean {
   const row = indexToRow(index)
