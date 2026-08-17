@@ -87,10 +87,18 @@
   function toggleDarkMode(): void {
     const modes: ('auto' | 'dark' | 'light')[] = ['auto', 'dark', 'light']
     const currentIndex = modes.indexOf(themeMode)
-    const nextIndex = (currentIndex + 1) % modes.length
-    themeMode = modes[nextIndex]
-    localStorage.setItem('sudoku-theme', themeMode)
-    updateTheme()
+    themeMode = modes[(currentIndex + 1) % modes.length]
+  }
+
+  function themeLabel(mode: 'auto' | 'dark' | 'light'): string {
+    switch (mode) {
+      case 'auto':
+        return 'Auto theme (follows system)'
+      case 'dark':
+        return 'Dark theme'
+      case 'light':
+        return 'Light theme'
+    }
   }
 
   function startNewGame(): void {
@@ -214,16 +222,54 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <main class="layout">
-  <header class="header">
-    <div class="header-content">
-      <h1>Sudoku</h1>
-      <p>Vite + Svelte + TypeScript + CSS Grid + PWA Starter</p>
+  <header class="masthead">
+    <div class="masthead-main">
+      <h1 class="masthead-title">Sudoku</h1>
+      <p class="masthead-subtitle">Fill every row, column and box with 1–9</p>
     </div>
-    <select class="theme-select" bind:value={themeMode} aria-label="Theme preference">
-      <option value="auto">⚙️ Auto (system)</option>
-      <option value="dark">🌙 Dark</option>
-      <option value="light">☀️ Light</option>
-    </select>
+    <button
+      class="theme-toggle"
+      onclick={toggleDarkMode}
+      aria-label={`${themeLabel(themeMode)}. Click to change.`}
+      title={themeLabel(themeMode)}
+    >
+      {#if themeMode === 'auto'}
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8" />
+          <path d="M12 3.5a8.5 8.5 0 0 1 0 17Z" fill="currentColor" />
+        </svg>
+      {:else if themeMode === 'dark'}
+        <svg
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z" />
+        </svg>
+      {:else}
+        <svg
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="4.5" />
+          <path
+            d="M12 2.5v2.5M12 19v2.5M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2.5 12h2.5M19 12h2.5M4.2 19.8l1.8-1.8M18 6l1.8-1.8"
+          />
+        </svg>
+      {/if}
+    </button>
   </header>
 
   <section class="board" aria-label="Generated Sudoku board">
@@ -264,7 +310,7 @@
         </select>
         <button class="new-game-btn" onclick={startNewGame}>New Game</button>
       </div>
-      <p class="difficulty-hint">Target clues: {clueTarget} | Actual clues: {game.clues}</p>
+      <p class="difficulty-hint">{game.clues} clues given (target {clueTarget})</p>
     </div>
 
     <div class="number-grid">
@@ -275,19 +321,34 @@
       {/each}
     </div>
 
-    <button class:active={isNotesMode} onclick={toggleNotesMode} aria-pressed={isNotesMode}>
-      {isNotesMode ? 'Notes Mode: On' : 'Notes Mode: Off'}
+    <button class="notes-toggle" class:active={isNotesMode} onclick={toggleNotesMode} aria-pressed={isNotesMode}>
+      <svg
+        class="pencil-icon"
+        viewBox="0 0 24 24"
+        width="15"
+        height="15"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M14.5 4.5l5 5L8 21H3v-5Z" />
+        <path d="M12.5 6.5l5 5" />
+      </svg>
+      {isNotesMode ? 'Notes on' : 'Notes off'}
     </button>
 
     <div class="actions">
-      <button onclick={clearSelectedCell} disabled={!canEditSelectedCell}>Clear Cell</button>
+      <button onclick={clearSelectedCell} disabled={!canEditSelectedCell}>Clear</button>
       <button onclick={checkSolution} disabled={!isBoardComplete}>Check</button>
-      <button disabled>Hint</button>
+      <button disabled title="Coming soon">Hint</button>
     </div>
 
     {#if checkResult !== 'idle'}
       <p class="check-result" class:correct={checkResult === 'correct'} class:incorrect={checkResult === 'incorrect'}>
-        {checkResult === 'correct' ? 'Correct solution! Well done.' : 'Not correct yet. Please check your entries.'}
+        {checkResult === 'correct' ? 'Correct solution. Well done.' : 'Not quite. Check your entries.'}
       </p>
     {/if}
   </aside>
