@@ -4,6 +4,9 @@ import { svelteTesting } from '@testing-library/svelte/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  server: {
+    host: '0.0.0.0'
+  },
   test: {
     environment: 'jsdom',
     globals: true,

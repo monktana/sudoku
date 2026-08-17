@@ -1,6 +1,54 @@
 import { fireEvent, render, screen } from '@testing-library/svelte'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, beforeEach, afterEach } from 'vitest'
 import App from './App.svelte'
+
+// Mock localStorage for tests
+const localStorageMock = (() => {
+  let store: Record<string, string> = {}
+  return {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => {
+      store[key] = value
+    },
+    removeItem: (key: string) => {
+      delete store[key]
+    },
+    clear: () => {
+      store = {}
+    }
+  }
+})()
+
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock
+})
+
+// Mock matchMedia for tests
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: (query: string) => ({
+    matches: query === '(prefers-color-scheme: light)',
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => true
+  })
+})
+
+beforeEach(() => {
+  // Reset localStorage before each test
+  window.localStorage.clear()
+  // Reset data-theme attribute
+  document.documentElement.removeAttribute('data-theme')
+})
+
+afterEach(() => {
+  window.localStorage.clear()
+  document.documentElement.removeAttribute('data-theme')
+})
 
 function getFirstEditableCell(container: HTMLElement): HTMLButtonElement {
   const editableCell = container.querySelector('.cell:not(.prefilled)')
@@ -75,6 +123,21 @@ describe('App notes mode', () => {
     expect(editableCell).toHaveTextContent('4')
   })
 
+  it.each(['Backspace', 'Delete'])('clears the selected cell with %s', async (key) => {
+    const { container } = render(App)
+
+    const editableCell = getFirstEditableCell(container)
+    await fireEvent.click(editableCell)
+    await fireEvent.keyDown(window, { key: '7' })
+
+    expect(editableCell).toHaveTextContent('7')
+
+    await fireEvent.keyDown(window, { key })
+
+    expect(editableCell).toHaveTextContent('')
+    expect(editableCell.querySelector('.cell-notes')).toBeNull()
+  })
+
   it('allows selecting prefilled cells and highlights matching filled values', async () => {
     const { container } = render(App)
 
@@ -127,5 +190,67 @@ describe('App notes mode', () => {
 
     expect(editableCell.querySelector('.cell-notes')).not.toBeNull()
     expect(editableCell).not.toHaveClass('matching-value')
+  })
+})
+
+describe('App theme', () => {
+  it('changes theme via dropdown and applies data-theme attribute', async () => {
+    render(App)
+
+    const themeSelect = screen.getByRole('combobox', { name: 'Theme preference' }) as HTMLSelectElement
+    expect(themeSelect).toHaveValue('auto')
+
+    // Change to dark mode
+    await fireEvent.change(themeSelect, { target: { value: 'dark' } })
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
+    expect(themeSelect).toHaveValue('dark')
+
+    // Change to light mode
+    await fireEvent.change(themeSelect, { target: { value: 'light' } })
+    expect(document.documentElement.getAttribute('data-theme')).toBeNull()
+    expect(themeSelect).toHaveValue('light')
+
+    // Change back to auto
+    await fireEvent.change(themeSelect, { target: { value: 'auto' } })
+    expect(themeSelect).toHaveValue('auto')
+  })
+
+  it('applies different computed colors when switching between light and dark themes', async () => {
+    render(App)
+
+    const themeSelect = screen.getByRole('combobox', { name: 'Theme preference' }) as HTMLSelectElement
+    const root = document.documentElement
+
+    // Change to light mode
+    await fireEvent.change(themeSelect, { target: { value: 'light' } })
+    expect(root.getAttribute('data-theme')).toBeNull()
+
+    // Change to dark mode and verify data-theme attribute is set
+    await fireEvent.change(themeSelect, { target: { value: 'dark' } })
+    expect(root.getAttribute('data-theme')).toBe('dark')
+
+    // Change back to light mode and verify attribute is removed
+    await fireEvent.change(themeSelect, { target: { value: 'light' } })
+    expect(root.getAttribute('data-theme')).toBeNull()
+
+    // Change to auto mode
+    await fireEvent.change(themeSelect, { target: { value: 'auto' } })
+    // In auto mode with light system preference (mocked), should not have data-theme
+    expect(root.getAttribute('data-theme')).toBeNull()
+  })
+
+  it('persists theme choice to localStorage', async () => {
+    render(App)
+
+    const themeSelect = screen.getByRole('combobox', { name: 'Theme preference' }) as HTMLSelectElement
+
+    await fireEvent.change(themeSelect, { target: { value: 'dark' } })
+    expect(localStorage.getItem('sudoku-theme')).toBe('dark')
+
+    await fireEvent.change(themeSelect, { target: { value: 'light' } })
+    expect(localStorage.getItem('sudoku-theme')).toBe('light')
+
+    await fireEvent.change(themeSelect, { target: { value: 'auto' } })
+    expect(localStorage.getItem('sudoku-theme')).toBe('auto')
   })
 })
