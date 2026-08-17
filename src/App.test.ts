@@ -123,6 +123,21 @@ describe('App notes mode', () => {
     expect(editableCell).toHaveTextContent('4')
   })
 
+  it.each(['Backspace', 'Delete'])('clears the selected cell with %s', async (key) => {
+    const { container } = render(App)
+
+    const editableCell = getFirstEditableCell(container)
+    await fireEvent.click(editableCell)
+    await fireEvent.keyDown(window, { key: '7' })
+
+    expect(editableCell).toHaveTextContent('7')
+
+    await fireEvent.keyDown(window, { key })
+
+    expect(editableCell).toHaveTextContent('')
+    expect(editableCell.querySelector('.cell-notes')).toBeNull()
+  })
+
   it('allows selecting prefilled cells and highlights matching filled values', async () => {
     const { container } = render(App)
 

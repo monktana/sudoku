@@ -181,6 +181,11 @@
       return
     }
 
+    if (event.key === 'Backspace' || event.key === 'Delete') {
+      clearSelectedCell()
+      return
+    }
+
     if (!/^[1-9]$/.test(event.key)) {
       return
     }
