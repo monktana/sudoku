@@ -71,15 +71,15 @@ describe('App notes mode', () => {
   it('toggles notes mode button state and label', async () => {
     render(App)
 
-    const notesToggle = screen.getByRole('button', { name: 'Notes Mode: Off' })
+    const notesToggle = screen.getByRole('button', { name: 'Notes off' })
     expect(notesToggle).toHaveAttribute('aria-pressed', 'false')
 
     await fireEvent.click(notesToggle)
-    expect(notesToggle).toHaveTextContent('Notes Mode: On')
+    expect(notesToggle).toHaveTextContent('Notes on')
     expect(notesToggle).toHaveAttribute('aria-pressed', 'true')
 
     await fireEvent.click(notesToggle)
-    expect(notesToggle).toHaveTextContent('Notes Mode: Off')
+    expect(notesToggle).toHaveTextContent('Notes off')
     expect(notesToggle).toHaveAttribute('aria-pressed', 'false')
   })
 
@@ -89,7 +89,7 @@ describe('App notes mode', () => {
     const editableCell = getFirstEditableCell(container)
     await fireEvent.click(editableCell)
 
-    const notesToggle = screen.getByRole('button', { name: 'Notes Mode: Off' })
+    const notesToggle = screen.getByRole('button', { name: 'Notes off' })
     await fireEvent.click(notesToggle)
 
     const numberTwo = screen.getByRole('button', { name: '2' })
@@ -109,7 +109,7 @@ describe('App notes mode', () => {
     const editableCell = getFirstEditableCell(container)
     await fireEvent.click(editableCell)
 
-    const notesToggle = screen.getByRole('button', { name: 'Notes Mode: Off' })
+    const notesToggle = screen.getByRole('button', { name: 'Notes off' })
     await fireEvent.click(notesToggle)
     await fireEvent.keyDown(window, { key: '1' })
     await fireEvent.keyDown(window, { key: '9' })
@@ -172,7 +172,7 @@ describe('App notes mode', () => {
     const editableCell = getFirstEditableCell(container)
     await fireEvent.click(editableCell)
 
-    const notesToggle = screen.getByRole('button', { name: 'Notes Mode: Off' })
+    const notesToggle = screen.getByRole('button', { name: 'Notes off' })
     await fireEvent.click(notesToggle)
 
     const numberFive = screen.getByRole('button', { name: '5' })
@@ -194,63 +194,40 @@ describe('App notes mode', () => {
 })
 
 describe('App theme', () => {
-  it('changes theme via dropdown and applies data-theme attribute', async () => {
+  it('cycles through auto, dark and light on click and applies data-theme attribute', async () => {
     render(App)
 
-    const themeSelect = screen.getByRole('combobox', { name: 'Theme preference' }) as HTMLSelectElement
-    expect(themeSelect).toHaveValue('auto')
-
-    // Change to dark mode
-    await fireEvent.change(themeSelect, { target: { value: 'dark' } })
-    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
-    expect(themeSelect).toHaveValue('dark')
-
-    // Change to light mode
-    await fireEvent.change(themeSelect, { target: { value: 'light' } })
+    const themeToggle = screen.getByRole('button', { name: /Auto theme/ })
     expect(document.documentElement.getAttribute('data-theme')).toBeNull()
-    expect(themeSelect).toHaveValue('light')
 
-    // Change back to auto
-    await fireEvent.change(themeSelect, { target: { value: 'auto' } })
-    expect(themeSelect).toHaveValue('auto')
-  })
+    // auto -> dark
+    await fireEvent.click(themeToggle)
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
+    expect(screen.getByRole('button', { name: /Dark theme/ })).toBeInTheDocument()
 
-  it('applies different computed colors when switching between light and dark themes', async () => {
-    render(App)
+    // dark -> light
+    await fireEvent.click(screen.getByRole('button', { name: /Dark theme/ }))
+    expect(document.documentElement.getAttribute('data-theme')).toBeNull()
+    expect(screen.getByRole('button', { name: /Light theme/ })).toBeInTheDocument()
 
-    const themeSelect = screen.getByRole('combobox', { name: 'Theme preference' }) as HTMLSelectElement
-    const root = document.documentElement
-
-    // Change to light mode
-    await fireEvent.change(themeSelect, { target: { value: 'light' } })
-    expect(root.getAttribute('data-theme')).toBeNull()
-
-    // Change to dark mode and verify data-theme attribute is set
-    await fireEvent.change(themeSelect, { target: { value: 'dark' } })
-    expect(root.getAttribute('data-theme')).toBe('dark')
-
-    // Change back to light mode and verify attribute is removed
-    await fireEvent.change(themeSelect, { target: { value: 'light' } })
-    expect(root.getAttribute('data-theme')).toBeNull()
-
-    // Change to auto mode
-    await fireEvent.change(themeSelect, { target: { value: 'auto' } })
-    // In auto mode with light system preference (mocked), should not have data-theme
-    expect(root.getAttribute('data-theme')).toBeNull()
+    // light -> auto
+    await fireEvent.click(screen.getByRole('button', { name: /Light theme/ }))
+    expect(screen.getByRole('button', { name: /Auto theme/ })).toBeInTheDocument()
   })
 
   it('persists theme choice to localStorage', async () => {
     render(App)
 
-    const themeSelect = screen.getByRole('combobox', { name: 'Theme preference' }) as HTMLSelectElement
-
-    await fireEvent.change(themeSelect, { target: { value: 'dark' } })
+    // auto -> dark
+    await fireEvent.click(screen.getByRole('button', { name: /Auto theme/ }))
     expect(localStorage.getItem('sudoku-theme')).toBe('dark')
 
-    await fireEvent.change(themeSelect, { target: { value: 'light' } })
+    // dark -> light
+    await fireEvent.click(screen.getByRole('button', { name: /Dark theme/ }))
     expect(localStorage.getItem('sudoku-theme')).toBe('light')
 
-    await fireEvent.change(themeSelect, { target: { value: 'auto' } })
+    // light -> auto
+    await fireEvent.click(screen.getByRole('button', { name: /Light theme/ }))
     expect(localStorage.getItem('sudoku-theme')).toBe('auto')
   })
 })

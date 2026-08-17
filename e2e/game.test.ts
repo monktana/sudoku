@@ -62,7 +62,7 @@ test.describe('Sudoku Game', () => {
     await emptyCell.click()
 
     await page.locator('.num-btn', { hasText: '4' }).click()
-    await page.locator('button', { hasText: 'Clear Cell' }).click()
+    await page.locator('.actions button', { hasText: 'Clear' }).click()
     await expect(emptyCell).toHaveText('')
   })
 
@@ -104,25 +104,25 @@ test.describe('Sudoku Game', () => {
   })
 
   test('notes mode toggles via control button', async ({ page }) => {
-    const notesToggle = page.locator('button', { hasText: 'Notes Mode' })
+    const notesToggle = page.locator('.notes-toggle')
 
     await expect(notesToggle).toHaveAttribute('aria-pressed', 'false')
-    await expect(notesToggle).toHaveText('Notes Mode: Off')
+    await expect(notesToggle).toContainText('Notes off')
 
     await notesToggle.click()
     await expect(notesToggle).toHaveAttribute('aria-pressed', 'true')
-    await expect(notesToggle).toHaveText('Notes Mode: On')
+    await expect(notesToggle).toContainText('Notes on')
 
     await notesToggle.click()
     await expect(notesToggle).toHaveAttribute('aria-pressed', 'false')
-    await expect(notesToggle).toHaveText('Notes Mode: Off')
+    await expect(notesToggle).toContainText('Notes off')
   })
 
   test('notes mode writes desaturated note candidates into a selected empty cell', async ({ page }) => {
     const emptyCell = page.locator('.cell:not(.prefilled)').first()
     await emptyCell.click()
 
-    await page.locator('button', { hasText: 'Notes Mode: Off' }).click()
+    await page.locator('.notes-toggle').click()
     await page.locator('.num-btn', { hasText: '2' }).click()
     await page.locator('.num-btn', { hasText: '7' }).click()
 
@@ -134,14 +134,14 @@ test.describe('Sudoku Game', () => {
     const noteColor = await emptyCell.locator('.note-value', { hasText: '2' }).evaluate((el) => {
       return getComputedStyle(el).color
     })
-    expect(noteColor).toBe('rgb(93, 112, 134)')
+    expect(noteColor).toBe('oklch(0.46 0.028 250)')
   })
 
   test('digit keys toggle notes in notes mode and set final value in normal mode', async ({ page }) => {
     const emptyCell = page.locator('.cell:not(.prefilled)').first()
     await emptyCell.click()
 
-    await page.locator('button', { hasText: 'Notes Mode: Off' }).click()
+    await page.locator('.notes-toggle').click()
 
     await page.keyboard.press('5')
     await expect(emptyCell.locator('.note-value', { hasText: '5' })).toHaveCount(1)
@@ -149,7 +149,7 @@ test.describe('Sudoku Game', () => {
     await page.keyboard.press('5')
     await expect(emptyCell.locator('.note-value', { hasText: '5' })).toHaveCount(0)
 
-    await page.locator('button', { hasText: 'Notes Mode: On' }).click()
+    await page.locator('.notes-toggle').click()
     await page.keyboard.press('5')
     await expect(emptyCell).toHaveText('5')
     await expect(emptyCell.locator('.cell-notes')).toHaveCount(0)
@@ -159,13 +159,13 @@ test.describe('Sudoku Game', () => {
     const emptyCell = page.locator('.cell:not(.prefilled)').first()
     await emptyCell.click()
 
-    await page.locator('button', { hasText: 'Notes Mode: Off' }).click()
+    await page.locator('.notes-toggle').click()
     await page.locator('.num-btn', { hasText: '1' }).click()
     await page.locator('.num-btn', { hasText: '9' }).click()
     await expect(emptyCell.locator('.note-value', { hasText: '1' })).toHaveCount(1)
     await expect(emptyCell.locator('.note-value', { hasText: '9' })).toHaveCount(1)
 
-    await page.locator('button', { hasText: 'Notes Mode: On' }).click()
+    await page.locator('.notes-toggle').click()
     await page.locator('.num-btn', { hasText: '4' }).click()
 
     await expect(emptyCell).toHaveText('4')
@@ -210,7 +210,7 @@ test.describe('Sudoku Game', () => {
     const emptyCell = page.locator('.cell:not(.prefilled)').first()
     await emptyCell.click()
 
-    await page.locator('button', { hasText: 'Notes Mode: Off' }).click()
+    await page.locator('.notes-toggle').click()
     await page.locator('.num-btn', { hasText: '5' }).click()
     await expect(emptyCell.locator('.cell-notes')).toHaveCount(1)
 
