@@ -513,3 +513,73 @@ button.active .pencil-icon {
     display: none;
   }
 }
+
+/* Save consent */
+
+.consent-banner {
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  margin-inline: auto;
+  max-width: 640px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 6px 20px oklch(0% 0 0 / 0.2), 0 1px 3px oklch(0% 0 0 / 0.1);
+  padding: 1.1rem 1.2rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.consent-text {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--color-ink-soft);
+}
+
+.consent-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.consent-accept {
+  border-color: var(--color-pen);
+  color: var(--color-pen);
+}
+
+@media (max-width: 480px) {
+  .consent-actions {
+    flex-direction: column-reverse;
+  }
+
+  .consent-actions button {
+    width: 100%;
+  }
+}
+
+.save-control {
+  display: flex;
+  align-items: center;
+}
+
+.save-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+}
+
+.save-toggle input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--color-pen);
+}

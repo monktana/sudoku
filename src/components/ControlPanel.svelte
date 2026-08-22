@@ -1,7 +1,8 @@
 <script lang="ts">
   import { DIFFICULTIES, labelForDifficulty, type SudokuGame } from '../lib/game.svelte'
+  import type { PersistenceConsent } from '../lib/persistence.svelte'
 
-  let { sudoku }: { sudoku: SudokuGame } = $props()
+  let { sudoku, consent }: { sudoku: SudokuGame; consent: PersistenceConsent } = $props()
 </script>
 
 <aside class="panel">
@@ -63,4 +64,15 @@
       {sudoku.checkResult === 'correct' ? 'Correct solution. Well done.' : 'Not quite. Check your entries.'}
     </p>
   {/if}
+
+  <div class="save-control">
+    <label class="save-toggle">
+      <input
+        type="checkbox"
+        checked={consent.isAccepted}
+        onchange={(event) => (event.currentTarget.checked ? consent.accept() : consent.decline())}
+      />
+      Save progress in this browser
+    </label>
+  </div>
 </aside>
