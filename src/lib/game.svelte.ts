@@ -1,4 +1,5 @@
 import { generateSudoku, getDifficultyTargetClues, getPeerIndices, type Difficulty, type SudokuPuzzle } from './sudoku'
+import type { SavedGameState } from './persistence.svelte'
 
 export const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'expert', 'master']
 
@@ -30,11 +31,19 @@ export class SudokuGame {
   isNotesMode: boolean = $state(false)
   checkResult: CheckResult = $state('idle')
 
-  constructor(initialDifficulty: Difficulty) {
-    this.difficulty = initialDifficulty
-    this.game = generateSudoku(initialDifficulty)
-    this.board = [...this.game.puzzle]
-    this.notesByCell = emptyNotes()
+  constructor(initialDifficulty: Difficulty, saved?: SavedGameState | null) {
+    if (saved) {
+      this.difficulty = saved.difficulty
+      this.game = saved.game
+      this.board = [...saved.board]
+      this.notesByCell = saved.notesByCell.map((notes) => [...notes])
+      this.isNotesMode = saved.isNotesMode
+    } else {
+      this.difficulty = initialDifficulty
+      this.game = generateSudoku(initialDifficulty)
+      this.board = [...this.game.puzzle]
+      this.notesByCell = emptyNotes()
+    }
   }
 
   get clueTarget(): number {

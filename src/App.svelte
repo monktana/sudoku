@@ -1,12 +1,29 @@
 <script lang="ts">
   import { ThemeState } from './lib/theme.svelte'
   import { SudokuGame } from './lib/game.svelte'
+  import { PersistenceConsent, loadSavedGame, saveGame } from './lib/persistence.svelte'
   import Masthead from './components/Masthead.svelte'
   import SudokuBoard from './components/SudokuBoard.svelte'
   import ControlPanel from './components/ControlPanel.svelte'
+  import SaveConsentBanner from './components/SaveConsentBanner.svelte'
 
   const theme = new ThemeState()
-  const sudoku = new SudokuGame('medium')
+  const consent = new PersistenceConsent()
+  const sudoku = new SudokuGame('medium', consent.isAccepted ? loadSavedGame() : null)
+
+  $effect(() => {
+    if (!consent.isAccepted) {
+      return
+    }
+
+    saveGame({
+      difficulty: sudoku.difficulty,
+      game: sudoku.game,
+      board: sudoku.board,
+      notesByCell: sudoku.notesByCell,
+      isNotesMode: sudoku.isNotesMode
+    })
+  })
 
   function handleKeydown(event: KeyboardEvent): void {
     const activeTag = (document.activeElement?.tagName ?? '').toLowerCase()
@@ -35,8 +52,12 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
+{#if !consent.isDecided}
+  <SaveConsentBanner onAccept={() => consent.accept()} onDecline={() => consent.decline()} />
+{/if}
+
 <main class="layout">
   <Masthead {theme} />
   <SudokuBoard {sudoku} />
-  <ControlPanel {sudoku} />
+  <ControlPanel {sudoku} {consent} />
 </main>

@@ -283,3 +283,84 @@ describe('App theme', () => {
     expect(localStorage.getItem('sudoku-theme')).toBe('auto')
   })
 })
+
+describe('App save progress consent', () => {
+  it('shows the consent banner on first load and saves nothing without a decision', async () => {
+    const { container } = render(App)
+
+    expect(screen.getByRole('dialog', { name: 'Save progress' })).toBeInTheDocument()
+
+    const editableCell = getFirstEditableCell(container)
+    await fireEvent.click(editableCell)
+    await fireEvent.keyDown(window, { key: '4' })
+
+    expect(localStorage.getItem('sudoku-save-consent')).toBeNull()
+    expect(localStorage.getItem('sudoku-saved-game')).toBeNull()
+  })
+
+  it('accepting the banner hides it and starts persisting game state', async () => {
+    const { container } = render(App)
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Save my progress' }))
+
+    expect(screen.queryByRole('dialog', { name: 'Save progress' })).not.toBeInTheDocument()
+    expect(localStorage.getItem('sudoku-save-consent')).toBe('accepted')
+
+    const editableCell = getFirstEditableCell(container)
+    await fireEvent.click(editableCell)
+    await fireEvent.keyDown(window, { key: '6' })
+
+    const saved = JSON.parse(localStorage.getItem('sudoku-saved-game') ?? 'null')
+    expect(saved).not.toBeNull()
+    expect(saved.board).toContain(6)
+  })
+
+  it('declining the banner hides it and never writes a saved game', async () => {
+    const { container } = render(App)
+
+    await fireEvent.click(screen.getByRole('button', { name: "Don't save" }))
+
+    expect(screen.queryByRole('dialog', { name: 'Save progress' })).not.toBeInTheDocument()
+    expect(localStorage.getItem('sudoku-save-consent')).toBe('declined')
+
+    const editableCell = getFirstEditableCell(container)
+    await fireEvent.click(editableCell)
+    await fireEvent.keyDown(window, { key: '8' })
+
+    expect(localStorage.getItem('sudoku-saved-game')).toBeNull()
+  })
+
+  it('the control panel checkbox reflects and can change the consent choice', async () => {
+    render(App)
+
+    const saveToggle = screen.getByRole('checkbox', { name: 'Save progress in this browser' })
+    expect(saveToggle).not.toBeChecked()
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Save my progress' }))
+    expect(saveToggle).toBeChecked()
+
+    await fireEvent.click(saveToggle)
+    expect(saveToggle).not.toBeChecked()
+    expect(localStorage.getItem('sudoku-save-consent')).toBe('declined')
+    expect(localStorage.getItem('sudoku-saved-game')).toBeNull()
+  })
+
+  it('restores a previously saved game on the next load instead of generating a new one', async () => {
+    const { container, unmount } = render(App)
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Save my progress' }))
+
+    const editableCell = getFirstEditableCell(container)
+    const cellIndex = Array.from(container.querySelectorAll('.cell')).indexOf(editableCell)
+    await fireEvent.click(editableCell)
+    await fireEvent.keyDown(window, { key: '3' })
+
+    unmount()
+
+    render(App)
+
+    expect(screen.queryByRole('dialog', { name: 'Save progress' })).not.toBeInTheDocument()
+    const restoredCell = screen.getByLabelText(`Cell ${cellIndex + 1}`)
+    expect(restoredCell).toHaveTextContent('3')
+  })
+})
