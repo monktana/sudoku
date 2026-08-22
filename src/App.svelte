@@ -52,12 +52,12 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
+{#if !consent.isDecided}
+  <SaveConsentBanner onAccept={() => consent.accept()} onDecline={() => consent.decline()} />
+{/if}
+
 <main class="layout">
   <Masthead {theme} />
   <SudokuBoard {sudoku} />
   <ControlPanel {sudoku} {consent} />
 </main>
-
-{#if !consent.isDecided}
-  <SaveConsentBanner onAccept={() => consent.accept()} onDecline={() => consent.decline()} />
-{/if}
