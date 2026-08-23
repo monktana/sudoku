@@ -13,6 +13,7 @@
       class:matching-value={sudoku.selectedFilledValue !== null &&
         sudoku.board[i] === sudoku.selectedFilledValue &&
         sudoku.board[i] !== 0}
+      class:conflict={sudoku.conflictingCellIndices.has(i)}
       aria-label={`Cell ${i + 1}`}
       onclick={() => sudoku.selectCell(i)}
     >

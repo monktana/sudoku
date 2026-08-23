@@ -69,4 +69,170 @@ describe('SudokuGame restoring from a saved state', () => {
 
     expect(sudoku.board).toEqual(sudoku.game.puzzle)
   })
+
+  it('defaults hintsUsed and lastHintAt when restoring a save from before hints existed', () => {
+    const saved = makeSavedState()
+    delete saved.hintsUsed
+    delete saved.lastHintAt
+
+    const sudoku = new SudokuGame('medium', saved)
+
+    expect(sudoku.hintsUsed).toBe(0)
+    expect(sudoku.lastHintAt).toBeNull()
+  })
+})
+
+describe('hint policy', () => {
+  it('gives easy unlimited hints gated only by a cooldown', () => {
+    const saved = makeSavedState({ difficulty: 'easy' })
+    const sudoku = new SudokuGame('easy', saved)
+
+    expect(sudoku.hintsRemaining).toBeNull()
+    expect(sudoku.hintPolicy.enabled).toBe(true)
+  })
+
+  it('limits medium and hard to a fixed number of hints', () => {
+    const medium = new SudokuGame('medium', makeSavedState({ difficulty: 'medium' }))
+    const hard = new SudokuGame('hard', makeSavedState({ difficulty: 'hard' }))
+
+    expect(medium.hintsRemaining).toBe(3)
+    expect(hard.hintsRemaining).toBe(2)
+  })
+
+  it('disables hints entirely for expert and master', () => {
+    const expert = new SudokuGame('expert', makeSavedState({ difficulty: 'expert' }))
+    const master = new SudokuGame('master', makeSavedState({ difficulty: 'master' }))
+
+    expect(expert.hintPolicy.enabled).toBe(false)
+    expect(master.hintPolicy.enabled).toBe(false)
+    expect(expert.hintsRemaining).toBe(0)
+    expect(master.hintsRemaining).toBe(0)
+
+    expert.selectCell(0)
+    expert.useHint(0)
+
+    expect(expert.board[0]).toBe(0)
+    expect(expert.hintsUsed).toBe(0)
+  })
+
+  it('reveals the solution value for the selected cell and counts it as used', () => {
+    const saved = makeSavedState({ difficulty: 'medium' })
+    const sudoku = new SudokuGame('medium', saved)
+
+    sudoku.selectCell(0)
+    sudoku.useHint(0)
+
+    expect(sudoku.board[0]).toBe(sudoku.game.solution[0])
+    expect(sudoku.hintsUsed).toBe(1)
+    expect(sudoku.hintsRemaining).toBe(2)
+    expect(sudoku.lastHintAt).toBe(0)
+  })
+
+  it('blocks another hint until the cooldown elapses', () => {
+    const saved = makeSavedState({ difficulty: 'easy' })
+    const sudoku = new SudokuGame('easy', saved)
+
+    sudoku.selectCell(0)
+    sudoku.useHint(0)
+
+    expect(sudoku.canRevealHint(29_999)).toBe(false)
+    expect(sudoku.canRevealHint(30_000)).toBe(true)
+  })
+
+  it('blocks hints once the per-game limit is used up, even after the cooldown', () => {
+    const saved = makeSavedState({ difficulty: 'hard' })
+    const sudoku = new SudokuGame('hard', saved)
+
+    // Cell 0 stays editable (it's the puzzle's only blank), so it can absorb both hints.
+    sudoku.selectCell(0)
+    sudoku.useHint(0)
+    sudoku.useHint(45_000)
+
+    expect(sudoku.hintsUsed).toBe(2)
+    expect(sudoku.canRevealHint(999_999)).toBe(false)
+  })
+
+  it('does not use up a hint when no editable cell is selected', () => {
+    const saved = makeSavedState({ difficulty: 'easy' })
+    const sudoku = new SudokuGame('easy', saved)
+
+    sudoku.useHint(0)
+
+    expect(sudoku.hintsUsed).toBe(0)
+    expect(sudoku.lastHintAt).toBeNull()
+  })
+
+  it('resets hint usage on a new game', () => {
+    const saved = makeSavedState({ difficulty: 'medium' })
+    const sudoku = new SudokuGame('medium', saved)
+
+    sudoku.selectCell(0)
+    sudoku.useHint(0)
+    sudoku.startNewGame()
+
+    expect(sudoku.hintsUsed).toBe(0)
+    expect(sudoku.lastHintAt).toBeNull()
+  })
+})
+
+describe('conflict feedback', () => {
+  it('flags cells that duplicate a value already visible in the same row', () => {
+    const solution = Array.from({ length: 81 }, (_, i) => (i % 9) + 1)
+    const puzzle = new Array(81).fill(0)
+    const game: SudokuPuzzle = { difficulty: 'easy', puzzle, solution, clues: 0 }
+    const saved: SavedGameState = {
+      difficulty: 'easy',
+      game,
+      board: [...puzzle],
+      notesByCell: Array.from({ length: 81 }, () => []),
+      isNotesMode: false
+    }
+
+    const sudoku = new SudokuGame('easy', saved)
+    // Row 0 gets two 5s: a visible, checkable duplicate.
+    sudoku.board[0] = 5
+    sudoku.board[1] = 5
+
+    expect(sudoku.conflictingCellIndices.has(0)).toBe(true)
+    expect(sudoku.conflictingCellIndices.has(1)).toBe(true)
+  })
+
+  it('does not flag a value that is simply wrong for the solution but has no visible duplicate', () => {
+    const solution = Array.from({ length: 81 }, (_, i) => (i % 9) + 1)
+    const puzzle = new Array(81).fill(0)
+    const game: SudokuPuzzle = { difficulty: 'easy', puzzle, solution, clues: 0 }
+    const saved: SavedGameState = {
+      difficulty: 'easy',
+      game,
+      board: [...puzzle],
+      notesByCell: Array.from({ length: 81 }, () => []),
+      isNotesMode: false
+    }
+
+    const sudoku = new SudokuGame('easy', saved)
+    // Cell 0's solution value is 1, but placing 9 here has no matching peer yet.
+    sudoku.board[0] = 9
+
+    expect(sudoku.conflictingCellIndices.size).toBe(0)
+  })
+
+  it('gives no conflict feedback at all for expert and master', () => {
+    const solution = Array.from({ length: 81 }, (_, i) => (i % 9) + 1)
+    const puzzle = new Array(81).fill(0)
+    const game: SudokuPuzzle = { difficulty: 'expert', puzzle, solution, clues: 0 }
+    const saved: SavedGameState = {
+      difficulty: 'expert',
+      game,
+      board: [...puzzle],
+      notesByCell: Array.from({ length: 81 }, () => []),
+      isNotesMode: false
+    }
+
+    const sudoku = new SudokuGame('expert', saved)
+    sudoku.board[0] = 5
+    sudoku.board[1] = 5
+
+    expect(sudoku.isConflictFeedbackEnabled).toBe(false)
+    expect(sudoku.conflictingCellIndices.size).toBe(0)
+  })
 })

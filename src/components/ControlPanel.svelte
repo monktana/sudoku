@@ -3,6 +3,27 @@
   import type { PersistenceConsent } from '../lib/persistence.svelte'
 
   let { sudoku, consent }: { sudoku: SudokuGame; consent: PersistenceConsent } = $props()
+
+  // Ticks once a second so the hint cooldown countdown stays live in the UI.
+  let now = $state(Date.now())
+
+  $effect(() => {
+    const interval = setInterval(() => (now = Date.now()), 1000)
+    return () => clearInterval(interval)
+  })
+
+  let hintLabel = $derived.by(() => {
+    if (!sudoku.hintPolicy.enabled) {
+      return 'No hints'
+    }
+
+    const cooldownRemainingMs = sudoku.hintCooldownRemainingMs(now)
+    if (cooldownRemainingMs > 0) {
+      return `Hint (${Math.ceil(cooldownRemainingMs / 1000)}s)`
+    }
+
+    return sudoku.hintsRemaining === null ? 'Hint' : `Hint (${sudoku.hintsRemaining} left)`
+  })
 </script>
 
 <aside class="panel">
@@ -56,7 +77,14 @@
   <div class="actions">
     <button onclick={() => sudoku.clearSelectedCell()} disabled={!sudoku.canEditSelectedCell}>Clear</button>
     <button onclick={() => sudoku.checkSolution()} disabled={!sudoku.isBoardComplete}>Check</button>
-    <button disabled title="Coming soon">Hint</button>
+    <button
+      class="hint-btn"
+      onclick={() => sudoku.useHint(now)}
+      disabled={!sudoku.canRevealHint(now)}
+      title={sudoku.hintPolicy.enabled ? undefined : 'Hints are disabled at this difficulty'}
+    >
+      {hintLabel}
+    </button>
   </div>
 
   {#if sudoku.checkResult !== 'idle'}

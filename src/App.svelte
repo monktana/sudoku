@@ -21,7 +21,9 @@
       game: sudoku.game,
       board: sudoku.board,
       notesByCell: sudoku.notesByCell,
-      isNotesMode: sudoku.isNotesMode
+      isNotesMode: sudoku.isNotesMode,
+      hintsUsed: sudoku.hintsUsed,
+      lastHintAt: sudoku.lastHintAt
     })
   })
 
