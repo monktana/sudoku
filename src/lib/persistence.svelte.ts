@@ -8,6 +8,9 @@ export interface SavedGameState {
   board: number[]
   notesByCell: number[][]
   isNotesMode: boolean
+  // Optional for backward compatibility with games saved before hints existed.
+  hintsUsed?: number
+  lastHintAt?: number | null
 }
 
 const CONSENT_KEY = 'sudoku-save-consent'
