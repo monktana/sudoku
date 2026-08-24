@@ -82,6 +82,68 @@ describe('SudokuGame restoring from a saved state', () => {
   })
 })
 
+describe('moveSelection', () => {
+  it('selects the top-left cell when nothing is selected yet', () => {
+    const sudoku = new SudokuGame('easy', makeSavedState())
+
+    sudoku.moveSelection('ArrowDown')
+
+    expect(sudoku.selectedCellIndex).toBe(0)
+  })
+
+  it('moves the selection by one cell per direction', () => {
+    const sudoku = new SudokuGame('easy', makeSavedState())
+
+    sudoku.selectCell(40) // row 4, col 4
+
+    sudoku.moveSelection('ArrowUp')
+    expect(sudoku.selectedCellIndex).toBe(31) // row 3, col 4
+
+    sudoku.moveSelection('ArrowDown')
+    expect(sudoku.selectedCellIndex).toBe(40) // back to row 4, col 4
+
+    sudoku.moveSelection('ArrowLeft')
+    expect(sudoku.selectedCellIndex).toBe(39) // row 4, col 3
+
+    sudoku.moveSelection('ArrowRight')
+    expect(sudoku.selectedCellIndex).toBe(40) // back to row 4, col 4
+  })
+
+  it('clamps at the top-left corner instead of wrapping', () => {
+    const sudoku = new SudokuGame('easy', makeSavedState())
+    sudoku.selectCell(0)
+
+    sudoku.moveSelection('ArrowUp')
+    expect(sudoku.selectedCellIndex).toBe(0)
+
+    sudoku.moveSelection('ArrowLeft')
+    expect(sudoku.selectedCellIndex).toBe(0)
+  })
+
+  it('clamps at the bottom-right corner instead of wrapping', () => {
+    const sudoku = new SudokuGame('easy', makeSavedState())
+    sudoku.selectCell(80)
+
+    sudoku.moveSelection('ArrowDown')
+    expect(sudoku.selectedCellIndex).toBe(80)
+
+    sudoku.moveSelection('ArrowRight')
+    expect(sudoku.selectedCellIndex).toBe(80)
+  })
+
+  it('does not cross into the next or previous row at the board edge', () => {
+    const sudoku = new SudokuGame('easy', makeSavedState())
+
+    sudoku.selectCell(8) // row 0, col 8 (last column)
+    sudoku.moveSelection('ArrowRight')
+    expect(sudoku.selectedCellIndex).toBe(8)
+
+    sudoku.selectCell(9) // row 1, col 0 (first column)
+    sudoku.moveSelection('ArrowLeft')
+    expect(sudoku.selectedCellIndex).toBe(9)
+  })
+})
+
 describe('hint policy', () => {
   it('gives easy unlimited hints gated only by a cooldown', () => {
     const saved = makeSavedState({ difficulty: 'easy' })

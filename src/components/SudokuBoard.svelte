@@ -2,11 +2,23 @@
   import type { SudokuGame } from '../lib/game.svelte'
 
   let { sudoku }: { sudoku: SudokuGame } = $props()
+
+  let cellRefs: (HTMLButtonElement | null)[] = []
+
+  // Keyboard (arrow key) selection changes don't move DOM focus on their own; follow it here
+  // so the visible focus ring and the "selected" cell never drift apart.
+  $effect(() => {
+    const index = sudoku.selectedCellIndex
+    if (index !== null) {
+      cellRefs[index]?.focus()
+    }
+  })
 </script>
 
 <section class="board" aria-label="Generated Sudoku board">
   {#each sudoku.board as value, i}
     <button
+      bind:this={cellRefs[i]}
       class="cell"
       class:prefilled={sudoku.game.puzzle[i] !== 0}
       class:selected={sudoku.selectedCellIndex === i}
