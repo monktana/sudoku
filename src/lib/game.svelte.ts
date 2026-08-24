@@ -1,9 +1,20 @@
-import { generateSudoku, getDifficultyTargetClues, getPeerIndices, type Difficulty, type SudokuPuzzle } from './sudoku'
+import {
+  BOARD_SIZE,
+  generateSudoku,
+  getDifficultyTargetClues,
+  getPeerIndices,
+  indexToCol,
+  indexToRow,
+  type Difficulty,
+  type SudokuPuzzle
+} from './sudoku'
 import type { SavedGameState } from './persistence.svelte'
 
 export const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'expert', 'master']
 
 export type CheckResult = 'idle' | 'correct' | 'incorrect'
+
+export type ArrowKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight'
 
 export interface HintPolicy {
   enabled: boolean
@@ -147,6 +158,24 @@ export class SudokuGame {
 
   selectCell(index: number): void {
     this.selectedCellIndex = index
+  }
+
+  // Moves the selection by one cell in the given direction, clamped to the board edges.
+  // Selects the top-left cell first if nothing is selected yet.
+  moveSelection(key: ArrowKey): void {
+    if (this.selectedCellIndex === null) {
+      this.selectedCellIndex = 0
+      return
+    }
+
+    const row = indexToRow(this.selectedCellIndex)
+    const col = indexToCol(this.selectedCellIndex)
+
+    const nextRow = key === 'ArrowUp' ? Math.max(0, row - 1) : key === 'ArrowDown' ? Math.min(BOARD_SIZE - 1, row + 1) : row
+    const nextCol =
+      key === 'ArrowLeft' ? Math.max(0, col - 1) : key === 'ArrowRight' ? Math.min(BOARD_SIZE - 1, col + 1) : col
+
+    this.selectedCellIndex = nextRow * BOARD_SIZE + nextCol
   }
 
   setSelectedCellValue(value: number): void {

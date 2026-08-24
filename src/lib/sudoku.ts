@@ -13,7 +13,7 @@ interface DifficultyProfile {
   targetClues: number
 }
 
-const BOARD_SIZE = 9
+export const BOARD_SIZE = 9
 const CELL_COUNT = BOARD_SIZE * BOARD_SIZE
 const BOX_SIZE = 3
 
@@ -43,12 +43,12 @@ function shuffled(values: number[]): number[] {
 }
 
 // Converts a flat index into its row number.
-function indexToRow(index: number): number {
+export function indexToRow(index: number): number {
   return Math.floor(index / BOARD_SIZE)
 }
 
 // Converts a flat index into its column number.
-function indexToCol(index: number): number {
+export function indexToCol(index: number): number {
   return index % BOARD_SIZE
 }
 
