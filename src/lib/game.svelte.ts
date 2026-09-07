@@ -199,7 +199,7 @@ export class SudokuGame {
       const nextNotes = [...this.notesByCell]
       nextNotes[index] = []
       this.notesByCell = nextNotes
-      this.checkResult = 'idle'
+      this.refreshCheckResult()
       return
     }
 
@@ -265,15 +265,19 @@ export class SudokuGame {
     const nextNotes = [...this.notesByCell]
     nextNotes[index] = []
     this.notesByCell = nextNotes
-    this.checkResult = 'idle'
+    this.refreshCheckResult()
   }
 
   toggleNotesMode(): void {
     this.isNotesMode = !this.isNotesMode
   }
 
-  checkSolution(): void {
+  // Recomputes checkResult from the current board: idle while incomplete, otherwise
+  // correct/incorrect against the solution. Called after every board mutation so the
+  // check happens automatically once the board fills up.
+  private refreshCheckResult(): void {
     if (!this.isBoardComplete) {
+      this.checkResult = 'idle'
       return
     }
 
@@ -297,7 +301,7 @@ export class SudokuGame {
     }
 
     this.notesByCell = nextNotes
-    this.checkResult = 'idle'
+    this.refreshCheckResult()
   }
 
   private toggleSelectedCellNote(value: number): void {

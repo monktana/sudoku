@@ -66,10 +66,6 @@ test.describe('Sudoku Game', () => {
     await expect(emptyCell).toHaveText('')
   })
 
-  test('check button is disabled when board is incomplete', async ({ page }) => {
-    await expect(page.locator('button', { hasText: 'Check' })).toBeDisabled()
-  })
-
   test('number buttons are disabled when no cell is selected', async ({ page }) => {
     const numButtons = page.locator('.num-btn')
     for (const btn of await numButtons.all()) {

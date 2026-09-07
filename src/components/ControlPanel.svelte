@@ -76,7 +76,6 @@
 
   <div class="actions">
     <button onclick={() => sudoku.clearSelectedCell()} disabled={!sudoku.canEditSelectedCell}>Clear</button>
-    <button onclick={() => sudoku.checkSolution()} disabled={!sudoku.isBoardComplete}>Check</button>
     <button
       class="hint-btn"
       onclick={() => sudoku.useHint(now)}

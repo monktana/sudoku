@@ -298,3 +298,68 @@ describe('conflict feedback', () => {
     expect(sudoku.conflictingCellIndices.size).toBe(0)
   })
 })
+
+describe('automatic check result', () => {
+  it('stays idle while the board still has empty cells', () => {
+    const saved = makeSavedState()
+    const sudoku = new SudokuGame('hard', saved)
+
+    expect(sudoku.checkResult).toBe('idle')
+  })
+
+  it('turns correct the moment the last cell is filled with the right value', () => {
+    const saved = makeSavedState({ isNotesMode: false })
+    const sudoku = new SudokuGame('hard', saved)
+
+    sudoku.selectCell(0)
+    sudoku.setSelectedCellValue(sudoku.game.solution[0])
+
+    expect(sudoku.checkResult).toBe('correct')
+  })
+
+  it('turns incorrect the moment the last cell is filled with a wrong value', () => {
+    const saved = makeSavedState({ isNotesMode: false })
+    const sudoku = new SudokuGame('hard', saved)
+    const wrongValue = (sudoku.game.solution[0] % 9) + 1
+
+    sudoku.selectCell(0)
+    sudoku.setSelectedCellValue(wrongValue)
+
+    expect(sudoku.checkResult).toBe('incorrect')
+  })
+
+  it('re-evaluates when a cell is edited after the board was already complete', () => {
+    const saved = makeSavedState({ isNotesMode: false })
+    const sudoku = new SudokuGame('hard', saved)
+    const wrongValue = (sudoku.game.solution[0] % 9) + 1
+
+    sudoku.selectCell(0)
+    sudoku.setSelectedCellValue(wrongValue)
+    expect(sudoku.checkResult).toBe('incorrect')
+
+    sudoku.setSelectedCellValue(sudoku.game.solution[0])
+    expect(sudoku.checkResult).toBe('correct')
+  })
+
+  it('resets to idle when a cell is cleared', () => {
+    const saved = makeSavedState({ isNotesMode: false })
+    const sudoku = new SudokuGame('hard', saved)
+
+    sudoku.selectCell(0)
+    sudoku.setSelectedCellValue(sudoku.game.solution[0])
+    expect(sudoku.checkResult).toBe('correct')
+
+    sudoku.clearSelectedCell()
+    expect(sudoku.checkResult).toBe('idle')
+  })
+
+  it('turns correct automatically when the last cell is filled via a hint', () => {
+    const saved = makeSavedState({ difficulty: 'easy' })
+    const sudoku = new SudokuGame('easy', saved)
+
+    sudoku.selectCell(0)
+    sudoku.useHint(0)
+
+    expect(sudoku.checkResult).toBe('correct')
+  })
+})
