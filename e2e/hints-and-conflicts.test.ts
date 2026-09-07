@@ -133,7 +133,7 @@ test.describe('Hints', () => {
     await expect(hintBtn).toBeDisabled()
   })
 
-  test('repeatedly hinting fills the board with a solution that passes Check', async ({ page }) => {
+  test('repeatedly hinting fills the board with a solution that automatically passes the check', async ({ page }) => {
     await page.clock.install()
     await page.goto('/')
     await page.locator('#difficulty').selectOption('easy')
@@ -149,9 +149,6 @@ test.describe('Hints', () => {
       index = await findFirstEmptyEditableIndex(page)
     }
 
-    const checkBtn = page.locator('.actions button', { hasText: 'Check' })
-    await expect(checkBtn).toBeEnabled()
-    await checkBtn.click()
     await expect(page.locator('.check-result')).toHaveClass(/correct/)
   })
 })
