@@ -1,8 +1,7 @@
 # Sudoku
 
 Meine eigene, werbefreie Sudoku-App – als PWA installierbar, läuft komplett
-lokal im Browser ohne Backend. Deployt über Coolify auf dem `stuff`-Server,
-erreichbar unter [sudoku.giebelmann.dev](https://sudoku.giebelmann.dev/).
+lokal im Browser ohne Backend. Deployt über Coolify, erreichbar unter [sudoku.giebelmann.dev](https://sudoku.giebelmann.dev/).
 
 ## Warum
 
@@ -45,7 +44,7 @@ Weitere nützliche Befehle:
 ## Deployment über Coolify
 
 Die App wird über den mitgelieferten `Dockerfile` gebaut (Multi-Stage:
-Node-Build → statischer Nginx-Container) und läuft auf dem `stuff`-Server,
+Node-Build → statischer Nginx-Container) und läuft auf dem `apps`-Server,
 nach demselben Muster wie die übrigen selbst gehosteten Apps in diesem
 Setup.
 
